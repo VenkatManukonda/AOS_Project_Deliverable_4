@@ -40,29 +40,35 @@ def authenticate():
 # Permission Check
 # -------------------------
 def check_permission(user, filename, action):
+    import os
+    # Only get the file name itself
     filename = os.path.basename(filename)
 
+    # Check if file exists in our simulated file system
     if filename not in files:
         print(f"File {filename} does not exist.")
         return False
 
+    # Admin can do anything
     if user["role"] == "admin":
         return True
 
-    perms = files[filename]["permissions"]
+    # Standard user permissions
+    perms = files[filename]["permissions"]  # e.g., "r--", "rw-"
 
-    if action == "read" and perms[0] == "r":
-        return True
+    # Map action to index in permissions string
+    action_index = {"read": 0, "write": 1, "execute": 2}
 
-    if action == "write" and perms[1] == "w":
-        return True
+    if action in action_index:
+        if perms[action_index[action]] == action[0]:  # "r" for read, etc.
+            return True
+        else:
+            print(f"Access denied: {user['role']} cannot {action} {filename}")
+            return False
 
-    if action == "execute" and perms[2] == "x":
-        return True
-
+    # Default deny
     print(f"Access denied: {user['role']} cannot {action} {filename}")
     return False
-
 
 # -------------------------
 # Execute Commands with Piping
