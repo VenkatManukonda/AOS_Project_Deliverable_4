@@ -35,26 +35,29 @@ def authenticate():
     print("Too many failed attempts. Exiting...")
     sys.exit()
 
-
 # -------------------------
 # Permission Check
 # -------------------------
 def check_permission(user, filename, action):
-    import os
     filename = os.path.basename(filename)
 
-    # Check if file exists
     if filename not in files:
         print(f"File {filename} does not exist.")
         return False
 
-    # Admin has full access
+    file_info = files[filename]
+
+    # Admin can do anything
     if user["role"] == "admin":
         return True
 
-    # Standard user must obey permissions
-    perms = files[filename]["permissions"]  # e.g., "r--", "rw-"
+    # Standard user can only access files they own
+    if file_info["owner"] != user["role"]:
+        print(f"Access denied: {user['role']} cannot {action} {filename}")
+        return False
 
+    # Check permissions string
+    perms = file_info["permissions"]  # e.g., "r--", "rw-"
     if action == "read" and perms[0] == "r":
         return True
     if action == "write" and perms[1] == "w":
@@ -62,7 +65,6 @@ def check_permission(user, filename, action):
     if action == "execute" and perms[2] == "x":
         return True
 
-    # Deny everything else
     print(f"Access denied: {user['role']} cannot {action} {filename}")
     return False
 
@@ -74,13 +76,15 @@ def execute_command(command, user):
     processes = []
 
     for i, cmd in enumerate(commands):
-
         parts = cmd.split()
+
+        # Only enforce read permissions for file commands
         if len(parts) > 1 and parts[0].lower() in ["type"]:
             filename = parts[1]
             if not check_permission(user, filename, "read"):
                 return
 
+        # Run command via cmd /c to support Windows/Powershell
         p = subprocess.Popen(
             ["cmd", "/c", cmd],
             stdin=processes[-1].stdout if i > 0 else None,
@@ -90,17 +94,17 @@ def execute_command(command, user):
 
         processes.append(p)
 
+    # Close intermediate outputs
     for p in processes[:-1]:
         p.stdout.close()
 
+    # Get final output
     output, error = processes[-1].communicate()
 
     if output:
         print(output.decode())
-
     if error:
         print(error.decode())
-
 
 # -------------------------
 # Main Shell Loop
@@ -123,7 +127,6 @@ def shell():
 
         except Exception as e:
             print(f"Error: {e}")
-
 
 if __name__ == "__main__":
     shell()
