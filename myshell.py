@@ -81,12 +81,12 @@ def execute_command(command, user):
             if not check_permission(user, filename, "read"):
                 return
 
-        p = subprocess.Popen(
-            cmd,
-            shell=True,
-            stdin=processes[-1].stdout if i > 0 else None,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+       p = subprocess.Popen(
+    ["cmd", "/c", cmd],
+    stdin=processes[-1].stdout if i > 0 else None,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+
         )
 
         processes.append(p)
