@@ -40,19 +40,28 @@ def authenticate():
 # Permission Check
 # -------------------------
 def check_permission(user, filename, action):
+    import os
+    
+    # Extract just the filename (remove folder path)
+    filename = os.path.basename(filename)
+
     if filename not in files:
         print(f"File {filename} does not exist.")
         return False
+
     perms = files[filename]["permissions"]
     role = user["role"]
+
     if role == "admin":
         return True  # admin has all access
+
     if action == "read" and perms[0] == "r":
         return True
     if action == "write" and perms[1] == "w":
         return True
     if action == "execute" and perms[2] == "x":
         return True
+
     print(f"Access denied: {role} cannot {action} {filename}")
     return False
 
