@@ -39,6 +39,7 @@ def authenticate():
 # Permission Check
 # -------------------------
 def check_permission(user, filename, action):
+    import os
     filename = os.path.basename(filename)
 
     if filename not in files:
@@ -51,8 +52,8 @@ def check_permission(user, filename, action):
     if user["role"] == "admin":
         return True
 
-    # Standard user can only access files they own
-    if file_info["owner"] != user["role"]:
+    # Standard user can only access files they own (by username)
+    if file_info["owner"] != [k for k,v in users.items() if v==user][0]:
         print(f"Access denied: {user['role']} cannot {action} {filename}")
         return False
 
