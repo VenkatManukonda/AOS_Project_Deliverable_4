@@ -74,19 +74,17 @@ def execute_command(command, user):
 
     for i, cmd in enumerate(commands):
 
-        # Permission check (basic simulation)
         parts = cmd.split()
         if len(parts) > 1 and parts[0] in ["type", "cat"]:
             filename = parts[1]
             if not check_permission(user, filename, "read"):
                 return
 
-       p = subprocess.Popen(
-    ["cmd", "/c", cmd],
-    stdin=processes[-1].stdout if i > 0 else None,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE
-
+        p = subprocess.Popen(
+            ["cmd", "/c", cmd],
+            stdin=processes[-1].stdout if i > 0 else None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
 
         processes.append(p)
