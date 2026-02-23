@@ -41,32 +41,28 @@ def authenticate():
 # -------------------------
 def check_permission(user, filename, action):
     import os
-    # Only get the file name itself
     filename = os.path.basename(filename)
 
-    # Check if file exists in our simulated file system
+    # Check if file exists
     if filename not in files:
         print(f"File {filename} does not exist.")
         return False
 
-    # Admin can do anything
+    # Admin has full access
     if user["role"] == "admin":
         return True
 
-    # Standard user permissions
+    # Standard user must obey permissions
     perms = files[filename]["permissions"]  # e.g., "r--", "rw-"
 
-    # Map action to index in permissions string
-    action_index = {"read": 0, "write": 1, "execute": 2}
+    if action == "read" and perms[0] == "r":
+        return True
+    if action == "write" and perms[1] == "w":
+        return True
+    if action == "execute" and perms[2] == "x":
+        return True
 
-    if action in action_index:
-        if perms[action_index[action]] == action[0]:  # "r" for read, etc.
-            return True
-        else:
-            print(f"Access denied: {user['role']} cannot {action} {filename}")
-            return False
-
-    # Default deny
+    # Deny everything else
     print(f"Access denied: {user['role']} cannot {action} {filename}")
     return False
 
