@@ -60,38 +60,37 @@ def check_permission(user, filename, action):
 # Execute Commands with Piping
 # -------------------------
 def execute_command(command, user):
-    # Split multiple commands by pipe
     commands = [cmd.strip() for cmd in command.split('|')]
-    num_cmds = len(commands)
     processes = []
 
     for i, cmd in enumerate(commands):
-        args = cmd.split()
-        
-        # File permission enforcement for certain commands
-        if args[0] in ["cat", "nano", "rm"] and len(args) > 1:
-            if not check_permission(user, args[1], "read" if args[0]=="cat" else "write"):
+
+        # Permission check (basic simulation)
+        parts = cmd.split()
+        if len(parts) > 1 and parts[0] in ["type", "cat"]:
+            filename = parts[1]
+            if not check_permission(user, filename, "read"):
                 return
 
-        # Setup stdin/stdout for pipes
-        if i == 0:
-            # First command: stdin is default
-            p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        else:
-            # Middle or last command: stdin comes from previous process
-            p = subprocess.Popen(args, stdin=processes[-1].stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdin=processes[-1].stdout if i > 0 else None,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
         processes.append(p)
 
-    # Close all previous pipes in parent
     for p in processes[:-1]:
         p.stdout.close()
 
-    # Get output and errors from last process
-    out, err = processes[-1].communicate()
-    if out:
-        print(out.decode())
-    if err:
-        print(err.decode())
+    output, error = processes[-1].communicate()
+
+    if output:
+        print(output.decode())
+    if error:
+        print(error.decode())
 
 # -------------------------
 # Main Shell Loop
