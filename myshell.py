@@ -14,7 +14,6 @@ users = {
 # -------------------------
 # File Permissions Setup
 # -------------------------
-# Simulated files with permissions: format -> {filename: {"owner": role, "permissions": "rwx"}}
 files = {
     "system_file.txt": {"owner": "admin", "permissions": "r--"},
     "user_data.txt": {"owner": "user", "permissions": "rw-"}
@@ -36,34 +35,34 @@ def authenticate():
     print("Too many failed attempts. Exiting...")
     sys.exit()
 
+
 # -------------------------
 # Permission Check
 # -------------------------
 def check_permission(user, filename, action):
-    import os
-    
-    # Extract just the filename (remove folder path)
     filename = os.path.basename(filename)
 
     if filename not in files:
         print(f"File {filename} does not exist.")
         return False
 
-    perms = files[filename]["permissions"]
-    role = user["role"]
+    if user["role"] == "admin":
+        return True
 
-    if role == "admin":
-        return True  # admin has all access
+    perms = files[filename]["permissions"]
 
     if action == "read" and perms[0] == "r":
         return True
+
     if action == "write" and perms[1] == "w":
         return True
+
     if action == "execute" and perms[2] == "x":
         return True
 
-    print(f"Access denied: {role} cannot {action} {filename}")
+    print(f"Access denied: {user['role']} cannot {action} {filename}")
     return False
+
 
 # -------------------------
 # Execute Commands with Piping
@@ -75,7 +74,7 @@ def execute_command(command, user):
     for i, cmd in enumerate(commands):
 
         parts = cmd.split()
-        if len(parts) > 1 and parts[0] in ["type", "cat"]:
+        if len(parts) > 1 and parts[0].lower() in ["type"]:
             filename = parts[1]
             if not check_permission(user, filename, "read"):
                 return
@@ -96,25 +95,33 @@ def execute_command(command, user):
 
     if output:
         print(output.decode())
+
     if error:
         print(error.decode())
+
 
 # -------------------------
 # Main Shell Loop
 # -------------------------
 def shell():
     user = authenticate()
+
     while True:
         try:
             command = input(f"{user['role']}@shell> ")
+
             if command.lower() in ["exit", "quit"]:
                 print("Exiting shell. Goodbye!")
                 break
+
             execute_command(command, user)
+
         except KeyboardInterrupt:
             print("\nSession interrupted. Use 'exit' to quit.")
+
         except Exception as e:
             print(f"Error: {e}")
+
 
 if __name__ == "__main__":
     shell()
