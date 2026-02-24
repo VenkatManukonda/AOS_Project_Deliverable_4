@@ -1,4 +1,0 @@
-Error: Disk failure
-Info: Backup completed
-Warning: Low memory
-Error: Network timeout
