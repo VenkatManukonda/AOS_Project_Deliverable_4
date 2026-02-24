@@ -1,2 +1,0 @@
-This is a protected system file.
-Only admin should access this.
