@@ -29,5 +29,4 @@ admin@shell> type files\user_data.txt | sort | findstr Error
 
 Attempt access as a standard user:
 standard@shell> type files\system_file.txt
-Access denied: standard cannot read system_file.txt
 
